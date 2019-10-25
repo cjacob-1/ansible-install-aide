@@ -1,0 +1,29 @@
+---
+- name: Install AIDE
+  hosts: awsservers
+  become: yes 
+  become_user: root
+  tasks:
+    - name: Install Aide
+      yum:
+        name: aide
+        state: installed
+
+    - name: Initialize AIDE 
+      command: aide --init
+
+    - name: check if database is present
+      stat: path=/var/lib/aide/aide.db.new.gz
+      register: db_stat
+
+    - name: move database if present
+      command: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+      when: db_stat.stat.exists
+
+    - name: Test AIDE 
+      command: aide --check
+      register: shell_result
+
+    - debug:
+        var: shell_result.stdout_lines
+      
